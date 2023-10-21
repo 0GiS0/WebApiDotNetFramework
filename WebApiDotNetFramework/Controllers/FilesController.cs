@@ -9,13 +9,32 @@ namespace WebApiDotNetFramework.Controllers
 {
     public class FilesController : ApiController
     {
-        string path = Environment.GetEnvironmentVariable("PATH_TO_REMOTE_FILES");
+        // Get values from environment variables
+        readonly string REMOTE_COMPUTER_NAME = Environment.GetEnvironmentVariable("REMOTE_COMPUTER_NAME");
+        readonly string USER_NAME = Environment.GetEnvironmentVariable("USER_NAME");
+        readonly string PASSWORD = Environment.GetEnvironmentVariable("PASSWORD");
+
+        string path = string.Empty;
+        string PATH_TO_REMOTE_FILES = Environment.GetEnvironmentVariable("PATH_TO_REMOTE_FILES");
         //string path = $@"{Path.GetPathRoot(Environment.SystemDirectory)}\mounts\remote-files\";
+
+        public FilesController()
+        {
+            path = string.Format($@"\\{REMOTE_COMPUTER_NAME}\{PATH_TO_REMOTE_FILES}");
+        }
 
         public HttpResponseMessage Get()
         {
+
+            string[] files;
+
             // List files in the directory
-            string[] files = Directory.GetFiles(path);
+            //string[] files = Directory.GetFiles(path);
+
+            using ((NetworkShareAccesser.Access(REMOTE_COMPUTER_NAME, USER_NAME, PASSWORD)))
+            {
+                files = Directory.GetFiles(path);
+            }
 
             return Request.CreateResponse(HttpStatusCode.OK, files);
         }
@@ -28,26 +47,25 @@ namespace WebApiDotNetFramework.Controllers
 
             try
             {
-
                 // The easy way: same credentials, same domain
-                postedFile.SaveAs(path + postedFile.FileName);
-
-                // Get values from environment variables
-                string REMOTE_COMPUTER_NAME = Environment.GetEnvironmentVariable("REMOTE_COMPUTER_NAME");
-                string USER_NAME = Environment.GetEnvironmentVariable("USER_NAME");
-                string PASSWORD = Environment.GetEnvironmentVariable("PASSWORD");
+                //postedFile.SaveAs(path + postedFile.FileName);                
 
                 // The hard way: different credentials, different domain
                 //https://stackoverflow.com/questions/659013/accessing-a-shared-file-unc-from-a-remote-non-trusted-domain-with-credentials/684040#684040
                 using ((NetworkShareAccesser.Access(REMOTE_COMPUTER_NAME, USER_NAME, PASSWORD)))
                 {
-                    postedFile.SaveAs($@"\\{REMOTE_COMPUTER_NAME}\test\{postedFile.FileName}");
+                    postedFile.SaveAs($@"{path}\{postedFile.FileName}");
                 }
 
+                //return Request.CreateResponse(HttpStatusCode.OK);
+                var response = Request.CreateResponse(HttpStatusCode.Moved);
+                // Get the full URI
 
-                return Request.CreateResponse(HttpStatusCode.OK);
+                response.Headers.Location = new Uri(HttpContext.Current.Request.Url.AbsoluteUri); //goes to GET /api/files
+                return response;
+
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
             }

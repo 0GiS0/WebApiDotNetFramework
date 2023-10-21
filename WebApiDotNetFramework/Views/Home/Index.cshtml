@@ -1,39 +1,20 @@
 ﻿<main>
     <section class="row" aria-labelledby="aspnetTitle">
-        <h1 id="aspnetTitle">ASP.NET</h1>
-        <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS, and JavaScript.</p>
-        <p><a href="https://asp.net" class="btn btn-primary btn-md">Learn more &raquo;</a></p>
+        <h1 id="aspnetTitle">.NET Framework 4.5 demo</h1>
+        <p class="lead">This is a legacy Web API which has some dependencies</p>      
     </section>
     <div class="row">
-        <section class="col-md-4" aria-labelledby="gettingStartedTitle">
-            <h2 id="gettingStartedTitle">Getting started</h2>
-            <p>ASP.NET Web API is a framework that makes it easy to build HTTP services that reach
-            a broad range of clients, including browsers and mobile devices. ASP.NET Web API
-            is an ideal platform for building RESTful applications on the .NET Framework.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301870">Learn more &raquo;</a></p>
-        </section>
-        <section class="col-md-4" aria-labelledby="librariesTitle">
-            <h2 id="librariesTitle">Get more libraries</h2>
-            <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301871">Learn more &raquo;</a></p>
-        </section>
-        <section class="col-md-4" aria-labelledby="hostingTitle">
-            <h2 id="hostingTitle">Web Hosting</h2>
-            <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301872">Learn more &raquo;</a></p>
-        </section>
+        <div class="col-12">
+            <form name="form" method="post" enctype="multipart/form-data" action="/api/files">                
+                <div>
+                    <label for="file">File</label>
+                    <input name="file" type="file" />
+                </div>
+                <div>
+                    <input type="submit" value="Submit" />
+                </div>
+            </form>
+        </div>
     </div>
-    <form name="form1" method="post" enctype="multipart/form-data" action="api/files">
-    <div>
-        <label for="filename">Image Caption</label>
-        <input name="filename" type="text" />
-    </div>
-    <div>
-        <label for="file">Image File</label>
-        <input name="file" type="file" />
-    </div>
-    <div>
-        <input type="submit" value="Submit" />
-    </div>
-</form>
+    
 </main>
