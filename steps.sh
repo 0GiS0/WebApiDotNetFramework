@@ -65,3 +65,13 @@ az containerapp  \
     --resource-group "$RESOURCE_GROUP" \
     --output table \
     --query '[].{Status: properties.status, Name: name, StartTime: properties.startTime}'
+
+docker login -u winvmiisdogacr -p TRi9j9vcjkeyXxcDNz9Tn8Ax42hJaG0mj52jBsaQq3+ACRCcEzzO winvmiisdogacr.azurecr.io
+docker run -e GITHUB_PAT=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 -e REPO_URL=https://github.com/$REPO_OWNER/$REPO_NAME -e REGISTRATION_TOKEN_API_URL=https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runners/registration-token winvmiisdogacr.azurecr.io/github-actions-runner:1.0
+
+docker login -u ghrunnerregistry -p EMie27K5D9p4yfvFfDOVvfHUzvlQcJQh1nLe5ZoC1y+ACRCFJcO4 ghrunnerregistry.azurecr.io
+docker run \
+-e GITHUB_PAT=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 \
+-e REPO_URL=https://github.com/$REPO_OWNER/$REPO_NAME \
+-e REGISTRATION_TOKEN_API_URL=https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runners/registration-token \
+ghrunnerregistry.azurecr.io/github-actions-runner:1.0
