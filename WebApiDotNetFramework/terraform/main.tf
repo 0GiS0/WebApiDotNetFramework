@@ -229,16 +229,11 @@ resource "azapi_resource" "gh_runner_aca" {
                 name = "github-runner"
                 # metadata = ["github-runner=https://api.github.com", "owner=${var.gh_repo_owner}", "runnerScope=repo", "repos=${var.gh_repo}", "targetWorkflowQueueLength=1"]
                 metadata = {
-                  name  = "github-runner"
-                  value = "https://api.github.com",
-                  name  = "owner"
-                  value = var.gh_repo_owner,
-                  name  = "runnerScope"
-                  value = "repo",
-                  name  = "repos"
-                  value = var.gh_repo,
-                  name  = "targetWorkflowQueueLength"
-                  value = "1"
+                  github-runner             = "https://api.github.com"
+                  owner                     = var.gh_repo_owner
+                  runnerScope               = "repo"
+                  repos                     = var.gh_repo
+                  targetWorkflowQueueLength = "1"
                 }
                 auth = [{
                   triggerParameter = "personalAccessToken"
@@ -257,8 +252,8 @@ resource "azapi_resource" "gh_runner_aca" {
             name  = "ghrunner"
             env = [
               {
-                name  = "GITHUB_PAT"
-                value = "secretref:personal-access-token"
+                name      = "GITHUB_PAT"
+                secretRef = "personal-access-token"
               },
               {
                 name  = "REPO_URL"

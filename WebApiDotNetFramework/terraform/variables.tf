@@ -21,5 +21,5 @@ variable "gh_repo" {
 
 variable "gh_repo_owner"{
     type    = string
-    default = "0GiS0"
+    default = "0gis0"
 }
