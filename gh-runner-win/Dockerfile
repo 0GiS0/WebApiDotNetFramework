@@ -20,6 +20,19 @@ RUN choco install -y \
     powershell-core \
     azure-cli
 
+
+# Download the PowerShell App Development Toolkit
+RUN Invoke-WebRequest -Uri "https://github.com/PSAppDeployToolkit/PSAppDeployToolkit/releases/download/3.8.4/PSAppDeployToolkit_v3.8.4.zip" -OutFile "PSAppDeployToolkit.zip"; \
+    Unblock-File -Path "PSAppDeployToolkit.zip"; \
+    Expand-Archive -Path "PSAppDeployToolkit.zip" -DestinationPath 'AppDeployToolkit'; \
+    Remove-Item "PSAppDeployToolkit.zip" -Force
+
+
+
+# Install Visual Studio 2022 Build Tools
+ADD scripts/Install-VSBuildTools.ps1 .
+RUN Powershell.exe -ExecutionPolicy Bypass .\Install-VSBuildTools.ps1 -DeploymentType "Install" -DeployMode "NonInteractive"
+
 #Download GitHub Runner based on RUNNER_VERSION argument (Can use: Docker build --build-arg RUNNER_VERSION=x.y.z)
 # https://github.com/actions/runner/releases
 RUN Invoke-WebRequest -Uri "https://github.com/actions/runner/releases/download/v$env:RUNNER_VERSION/actions-runner-win-x64-$env:RUNNER_VERSION.zip" -OutFile "actions-runner.zip"; \
