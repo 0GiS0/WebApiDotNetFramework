@@ -398,3 +398,4 @@ terraform.rc
 WebApiDotNetFramework/terraform/.terraform.lock.hcl
 .gitignore
 WebApiDotNetFramework/terraform/main.tfplan
+.env
