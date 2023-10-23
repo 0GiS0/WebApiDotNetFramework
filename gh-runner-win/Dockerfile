@@ -1,4 +1,5 @@
-FROM mcr.microsoft.com/windows/servercore/insider:10.0.20348.1-amd64
+# FROM mcr.microsoft.com/windows/servercore/insider:10.0.20348.1-amd64
+FROM mcr.microsoft.com/dotnet/framework/sdk:4.8.1
 
 #input GitHub runner version argument
 ARG RUNNER_VERSION
