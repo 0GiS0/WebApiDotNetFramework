@@ -25,6 +25,8 @@ RUN choco install -y \
 RUN Invoke-WebRequest -Uri "https://github.com/PSAppDeployToolkit/PSAppDeployToolkit/releases/download/3.8.4/PSAppDeployToolkit_v3.8.4.zip" -OutFile "PSAppDeployToolkit.zip"; \
     Unblock-File -Path "PSAppDeployToolkit.zip"; \
     Expand-Archive -Path "PSAppDeployToolkit.zip" -DestinationPath 'AppDeployToolkit'; \
+    # Check AppDeployToolkit
+    Get-ChildItem -Path "AppDeployToolkit" \
     Remove-Item "PSAppDeployToolkit.zip" -Force
 
 
