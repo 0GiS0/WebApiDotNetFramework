@@ -157,7 +157,10 @@ resource "random_pet" "prefix" {
 #   SETTINGS
 # }
 
-# Create an Azure Container App in the same vnet to execute GitHub runners
+##########################################################################
+####### Create an Azure Container App for Linux GitHub runnners ##########
+##########################################################################
+
 # Create Azure Container Registry
 resource "azurerm_container_registry" "acr" {
   name                = "${replace(random_pet.prefix.id, "-", "")}acr"
@@ -167,7 +170,7 @@ resource "azurerm_container_registry" "acr" {
   admin_enabled       = true
 }
 
-# Create ACR task
+# Create ACR task - for GH Runner Linux
 resource "azurerm_container_registry_task" "acr_task" {
   name                  = "generate-gh-runner"
   container_registry_id = azurerm_container_registry.acr.id
@@ -246,10 +249,11 @@ resource "azapi_resource" "gh_runner_aca" {
             pollingInterval = 30
             rules = [
               {
+                # https://keda.sh/docs/2.12/scalers/github-runner/
                 type = "github-runner"
                 name = "github-runner"
                 metadata = {
-                  githubAPIURL             = "https://api.github.com"
+                  githubAPIURL              = "https://api.github.com"
                   owner                     = var.gh_repo_owner
                   runnerScope               = "repo"
                   repos                     = var.gh_repo
@@ -301,5 +305,57 @@ resource "azapi_resource" "gh_runner_aca" {
       }
     }
   })
-  
+
+}
+
+##########################################################################
+##### Create an Azure Container Instances for Windows GitHub runnners ####
+##########################################################################
+# https://dev.to/pwd9000/create-a-docker-based-self-hosted-github-runner-windows-container-3p7e
+
+# Generate GH Runner for Windows
+resource "azurerm_container_registry_task" "acr_task" {
+  name                  = "generate-windows-gh-runner"
+  container_registry_id = azurerm_container_registry.acr.id
+
+  platform {
+    os = "Windows"
+  }
+
+  docker_step {
+    dockerfile_path      = "Dockerfile"
+    context_path         = "https://github.com/0gis0/WebApiDotNetFramework/gh-runner-windows"
+    context_access_token = var.gh_pat
+    image_names          = ["gh-windows-runner:1.0"]
+  }
+
+  provisioner "local-exec" {
+    # Execute ACR task
+    command = "az acr task run --registry ${azurerm_container_registry.acr.name} --name ${azurerm_container_registry_task.acr_task.name}"
+  }
+}
+
+# Execute ACR task
+resource "azurerm_container_registry_task_schedule_run_now" "task_run" {
+  depends_on                 = [azurerm_container_registry_task.acr_task]
+  container_registry_task_id = azurerm_container_registry_task.acr_task.id
+}
+
+
+
+# Create azure container group
+resource "azurerm_container_group" "aci_group" {
+
+  name                = "aci-win-gh-runner"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  os_type = "Windows"
+
+  container {
+    name   = "gh-runner-windows"
+    image  = "mcr.microsoft.com/windows/servercore:ltsc2019"
+    cpu    = "2.0"
+    memory = "4"
+  }
 }
