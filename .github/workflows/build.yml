@@ -6,9 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    # runs-on: windows-latest
-    runs-on: self-hosted
+  build:    
+    runs-on: [self-hosted, Windows, X64]
     
 
     steps:

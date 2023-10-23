@@ -171,7 +171,7 @@ resource "azurerm_container_registry" "acr" {
 }
 
 # Create ACR task - for GH Runner Linux
-resource "azurerm_container_registry_task" "acr_task" {
+resource "azurerm_container_registry_task" "linux_acr_task" {
   name                  = "generate-gh-runner"
   container_registry_id = azurerm_container_registry.acr.id
 
@@ -188,17 +188,17 @@ resource "azurerm_container_registry_task" "acr_task" {
 
   provisioner "local-exec" {
     # Execute ACR task
-    command = "az acr task run --registry ${azurerm_container_registry.acr.name} --name ${azurerm_container_registry_task.acr_task.name}"
+    command = "az acr task run --registry ${azurerm_container_registry.acr.name} --name ${azurerm_container_registry_task.linux_acr_task.name}"
   }
 }
 
 
 
 # Execute ACR task
-resource "azurerm_container_registry_task_schedule_run_now" "task_run" {
-  depends_on                 = [azurerm_container_registry_task.acr_task]
-  container_registry_task_id = azurerm_container_registry_task.acr_task.id
-}
+# resource "azurerm_container_registry_task_schedule_run_now" "task_run" {
+#   depends_on                 = [azurerm_container_registry_task.acr_task]
+#   container_registry_task_id = azurerm_container_registry_task.acr_task.id
+# }
 
 # https://learn.microsoft.com/en-us/azure/container-apps/tutorial-ci-cd-runners-jobs?tabs=bash&pivots=container-apps-jobs-self-hosted-ci-cd-github-actions
 resource "azurerm_log_analytics_workspace" "workspace" {
@@ -219,7 +219,7 @@ resource "azurerm_container_app_environment" "aca_env" {
 
 resource "azapi_resource" "gh_runner_aca" {
 
-  depends_on = [azurerm_container_registry_task.acr_task]
+  depends_on = [azurerm_container_registry_task.linux_acr_task]
 
   type      = "Microsoft.App/jobs@2023-04-01-preview"
   name      = "gh-runner"
@@ -314,8 +314,8 @@ resource "azapi_resource" "gh_runner_aca" {
 # https://dev.to/pwd9000/create-a-docker-based-self-hosted-github-runner-windows-container-3p7e
 
 # Generate GH Runner for Windows
-resource "azurerm_container_registry_task" "acr_task" {
-  name                  = "generate-windows-gh-runner"
+resource "azurerm_container_registry_task" "windows_acr_task" {
+  name                  = "generate-win-gh-runner"
   container_registry_id = azurerm_container_registry.acr.id
 
   platform {
@@ -323,39 +323,63 @@ resource "azurerm_container_registry_task" "acr_task" {
   }
 
   docker_step {
-    dockerfile_path      = "Dockerfile"
-    context_path         = "https://github.com/0gis0/WebApiDotNetFramework/gh-runner-windows"
+    dockerfile_path = "Dockerfile"
+    context_path    = "https://github.com/0gis0/WebApiDotNetFramework#master:gh-runner-win"
+    arguments = {
+      "RUNNER_VERSION" = "2.310.2"
+    }
     context_access_token = var.gh_pat
     image_names          = ["gh-windows-runner:1.0"]
   }
 
   provisioner "local-exec" {
     # Execute ACR task
-    command = "az acr task run --registry ${azurerm_container_registry.acr.name} --name ${azurerm_container_registry_task.acr_task.name}"
+    command = "az acr task run --registry ${azurerm_container_registry.acr.name} --name ${azurerm_container_registry_task.windows_acr_task.name}"
   }
 }
 
-# Execute ACR task
-resource "azurerm_container_registry_task_schedule_run_now" "task_run" {
-  depends_on                 = [azurerm_container_registry_task.acr_task]
-  container_registry_task_id = azurerm_container_registry_task.acr_task.id
-}
+# # Execute ACR task
+# resource "azurerm_container_registry_task_schedule_run_now" "task_run" {
+#   depends_on                 = [azurerm_container_registry_task.acr_task]
+#   container_registry_task_id = azurerm_container_registry_task.acr_task.id
+# }
 
 
 
 # Create azure container group
 resource "azurerm_container_group" "aci_group" {
 
+  depends_on = [azurerm_container_registry_task.windows_acr_task]
+
   name                = "aci-win-gh-runner"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
-  os_type = "Windows"
+  # Windows containers are not supported in virtual networks.
+  os_type         = "Windows"
+  ip_address_type = "Public"
+
+  image_registry_credential {
+    server   = azurerm_container_registry.acr.login_server
+    username = azurerm_container_registry.acr.admin_username
+    password = azurerm_container_registry.acr.admin_password
+  }
 
   container {
     name   = "gh-runner-windows"
-    image  = "mcr.microsoft.com/windows/servercore:ltsc2019"
+    image  = "${azurerm_container_registry.acr.login_server}/gh-windows-runner:1.0"
     cpu    = "2.0"
     memory = "4"
+
+    ports {
+      port     = 443
+      protocol = "TCP"
+    }
+
+    secure_environment_variables = {
+      GH_TOKEN      = var.gh_pat
+      GH_REPOSITORY = var.gh_repo
+      GH_OWNER      = var.gh_repo_owner
+    }
   }
 }
