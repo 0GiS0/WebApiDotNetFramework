@@ -383,3 +383,129 @@ resource "azurerm_container_group" "aci_group" {
     }
   }
 }
+
+# ###################################################################################
+# ##### Create an AKS cluster with a Windows nodepool for the Windows GH Runners ####
+# ###################################################################################
+
+# resource "azurerm_kubernetes_cluster" "aks" {
+#   name                = "${random_pet.prefix.id}-aks"
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
+#   dns_prefix          = "${random_pet.prefix.id}-aks"
+
+#   default_node_pool {
+#     name       = "default"
+#     node_count = 1
+#     vm_size    = "Standard_DS2_v2"
+#   }
+
+#   identity {
+#     type = "SystemAssigned"
+#   }
+
+#   network_profile {
+#     network_plugin    = "azure"
+#     load_balancer_sku = "standard"
+#     outbound_type     = "loadBalancer"
+#     # network_policy    = "calico"
+#   }
+# }
+# resource "azurerm_kubernetes_cluster_node_pool" "win101" {
+#   enable_auto_scaling   = true
+#   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
+#   max_count             = 3
+#   min_count             = 1
+#   mode                  = "User"
+#   name                  = "win-nodepool"
+#   orchestrator_version  = data.azurerm_kubernetes_service_versions.current.latest_version
+#   os_disk_size_gb       = 30
+#   os_type               = "Windows" # Default is Linux, we can change to Windows
+#   vm_size               = "Standard_DS2_v2"
+#   priority              = "Regular" # Default is Regular, we can change to Spot with additional settings like eviction_policy, spot_max_price, node_labels and node_taints
+
+#   node_labels = {
+#     "nodepool-type" = "user"
+#     "environment"   = "build"
+#     "nodepoolos"    = "windows"
+#     "app"           = "dotnet-apps"
+#   }
+
+#   tags = {
+#     "nodepool-type" = "user"
+#     "environment"   = "build"
+#     "nodepoolos"    = "windows"
+#     "app"           = "dotnet-apps"
+#   }
+# }
+
+# # Create kubernetes deployment using kubernetes provider
+# resource "kubernetes_deployment" "gh_runner_deploy" {
+
+#   metadata {
+#     name = "gh-runner-deploy"
+#     labels = {
+#       app = "gh-runner"
+#     }
+#   }
+
+#   spec {
+#     replicas = 1
+
+#     selector {
+#       match_labels = {
+#         app = "gh-runner"
+#       }
+#     }
+
+#     template {
+#       metadata {
+#         labels = {
+#           app = "gh-runner"
+#         }
+#       }
+
+#       spec {
+#         container {
+#           image = "${azurerm_container_registry.acr.login_server}/gh-windows-runner:1.0"
+#           name  = "gh-runner-windows"
+#           # env = [
+#           #   {
+#           #     name      = "GH_TOKEN"
+#           #     valueFrom = {
+#           #       secretKeyRef = {
+#           #         name = "gh-runner-secret"
+#           #         key  = "GH_TOKEN"
+#           #       }
+#           #     }
+#           #   },
+#           #   {
+#           #     name      = "GH_REPOSITORY"
+#           #     valueFrom = {
+#           #       secretKeyRef = {
+#           #         name = "gh-runner-secret"
+#           #         key  = "GH_REPOSITORY"
+#           #       }
+#           #     }
+#           #   },
+#           #   {
+#           #     name      = "GH_OWNER"
+#           #     valueFrom = {
+#           #       secretKeyRef = {
+#           #         name = "gh-runner-secret"
+#           #         key  = "GH_OWNER"
+#           #       }
+#           #     }
+#           #   }
+#           # ]         
+#           resources {
+#             requests = {
+#               cpu    = "2.0"
+#               memory = "4Gi"
+#             }
+#           }
+#         }
+#       }
+#     }
+#   }
+# }
