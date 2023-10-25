@@ -83,3 +83,6 @@ az containerapp logs show \
     --name "gh-runner" \
     --resource-group "win-vm-iis-goat-rg" \
     --follow
+
+
+terraform init
